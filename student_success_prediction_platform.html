@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Success Prediction Platform</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Merriweather for Academic Authority -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        royal: {
+                            950: '#001540',
+                            900: '#002366', // Primary Deep Royal Blue
+                            800: '#1E3A8A', // Secondary Royal Accent
+                            700: '#1D4ED8',
+                            600: '#2563EB', // Interactive Royal Blue
+                            100: '#DBEAFE',
+                            50:  '#EFF6FF'
+                        },
+                        cream: {
+                            50:  '#FDFBF7', // Main Light Cream Background
+                            100: '#F5F2EB', // Secondary Warm Cream
+                            200: '#F4EFE6', // Panel / Card Accent Cream
+                            300: '#E5DEC9', // Subtle Cream Border
+                            400: '#D4C9B0'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FDFBF7;
+            color: #0F172A;
+            font-family: 'Inter', sans-serif;
+        }
+        .academic-title {
+            font-family: 'Merriweather', serif;
+        }
+        /* Custom Scrollbar in Royal Blue & Cream */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F5F2EB;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E3A8A;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #002366;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-cream-50 text-slate-800 selection:bg-royal-800 selection:text-cream-50">
+
+    <!-- Top Academic Navigation Header -->
+    <header class="bg-royal-900 text-cream-50 border-b-4 border-royal-600 shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-cream-50 text-royal-900 rounded-lg shadow-inner flex items-center justify-center">
+                    <i data-lucide="graduation-cap" class="w-7 h-7 stroke-[2.2]"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight academic-title text-cream-50">
+                        Student Success Prediction Platform
+                    </h1>
+                    <p class="text-xs sm:text-sm text-cream-200 font-light">
+                        Client-Side Machine Learning &amp; Explainable Academic Intervention System
+                    </p>
+                </div>
+            </div>
+
+            <!-- Active Model Status Pill -->
+            <div class="flex items-center space-x-3 bg-royal-950/80 border border-royal-700 px-3.5 py-2 rounded-lg self-start md:self-auto">
+                <span id="modelStatusDot" class="w-2.5 h-2.5 rounded-full bg-cream-50 animate-pulse"></span>
+                <div class="text-xs">
+                    <span class="text-cream-200 block uppercase tracking-wider font-semibold text-[10px]">Active ML Engine</span>
+                    <span id="modelStatusText" class="font-medium text-cream-50">Calibrated Logistic Baseline (v1.0)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-royal-800/90 border-t border-royal-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 sm:space-x-4 overflow-x-auto">
+                <button onclick="switchTab('predictor')" id="tab-predictor" class="tab-btn flex items-center space-x-2 py-3 px-4 text-sm font-medium border-b-4 border-cream-50 text-cream-50 bg-royal-900/50 transition-all whitespace-nowrap">
+                    <i data-lucide="calculator" class="w-4 h-4"></i>
+                    <span>1. Single Student Predictor</span>
+                </button>
+                <button onclick="switchTab('roster')" id="tab-roster" class="tab-btn flex items-center space-x-2 py-3 px-4 text-sm font-medium border-b-4 border-transparent text-cream-200 hover:text-cream-50 hover:bg-royal-900/30 transition-all whitespace-nowrap">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>2. Active Cohort Roster &amp; Analytics</span>
+                    <span id="rosterCountBadge" class="ml-1.5 px-2 py-0.5 text-xs rounded-full bg-royal-950 text-cream-100 border border-royal-600">0</span>
+                </button>
+                <button onclick="switchTab('engine')" id="tab-engine" class="tab-btn flex items-center space-x-2 py-3 px-4 text-sm font-medium border-b-4 border-transparent text-cream-200 hover:text-cream-50 hover:bg-royal-900/30 transition-all whitespace-nowrap">
+                    <i data-lucide="cpu" class="w-4 h-4"></i>
+                    <span>3. Live ML Training &amp; Weights</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Banner (Hidden by default, replaces alert()) -->
+    <div id="notificationBanner" class="hidden max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
+        <div id="notificationBox" class="flex items-center justify-between px-4 py-3 rounded-lg border bg-cream-100 border-royal-800 text-royal-900 shadow-sm">
+            <div class="flex items-center space-x-3">
+                <i data-lucide="info" class="w-5 h-5 text-royal-800 shrink-0"></i>
+                <span id="notificationMessage" class="text-sm font-medium"></span>
+            </div>
+            <button onclick="hideNotification()" class="text-royal-800 hover:text-royal-950 p-1">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ========================================== -->
+        <!-- TAB 1: SINGLE STUDENT PREDICTOR            -->
+        <!-- ========================================== -->
+        <section id="view-predictor" class="space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Column: Student Assessment Form -->
+                <div class="lg:col-span-5 bg-white border-2 border-royal-900/20 rounded-xl shadow-sm overflow-hidden">
+                    <div class="bg-cream-200 border-b border-cream-300 px-6 py-4 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-royal-900 academic-title">Student Metrics Input</h2>
+                            <p class="text-xs text-slate-600">Enter authentic student observations to run inference</p>
+                        </div>
+                        <button type="button" onclick="resetPredictorForm()" class="text-xs font-medium text-royal-800 hover:text-royal-600 underline flex items-center gap-1">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Clear Form
+                        </button>
+                    </div>
+
+                    <form id="studentAssessmentForm" onsubmit="handleRunPrediction(event)" class="p-6 space-y-5">
+                        <!-- Student Identifier -->
+                        <div>
+                            <label for="inputStudentId" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1.5">
+                                Student ID or Full Name <span class="text-red-600">*</span>
+                            </label>
+                            <input type="text" id="inputStudentId" required placeholder="e.g., STU-2026-001 or Jane Doe"
+                                class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-400 rounded-lg text-sm text-slate-900 placeholder-slate-400">
+                        </div>
+
+                        <!-- 2-Column Grid for Numeric Inputs -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="inputAttendance" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1.5">
+                                    Attendance Rate (%) <span class="text-red-600">*</span>
+                                </label>
+                                <input type="number" id="inputAttendance" required min="0" max="100" step="0.1" placeholder="0.0 - 100.0"
+                                    class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-400 rounded-lg text-sm text-slate-900 placeholder-slate-400">
+                            </div>
+
+                            <div>
+                                <label for="inputStudyHours" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1.5">
+                                    Study Hours / Week <span class="text-red-600">*</span>
+                                </label>
+                                <input type="number" id="inputStudyHours" required min="0" max="100" step="0.5" placeholder="e.g., 14.5"
+                                    class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-400 rounded-lg text-sm text-slate-900 placeholder-slate-400">
+                            </div>
+                        </div>
+
+                        <!-- Previous GPA with Scale Toggle (4.0 vs 10.0) -->
+                        <div class="bg-cream-100 p-3.5 rounded-lg border border-cream-300">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label for="inputGpa" class="block text-xs font-bold uppercase tracking-wider text-royal-900">
+                                    Previous Cumulative GPA <span class="text-red-600">*</span>
+                                </label>
+                                <div class="inline-flex rounded-md shadow-sm bg-cream-200 p-0.5 border border-cream-400">
+                                    <button type="button" id="scaleBtn4" onclick="setGpaScale(4)" class="px-2 py-0.5 text-[11px] font-bold rounded bg-royal-900 text-cream-50 transition">
+                                        4.0 Scale
+                                    </button>
+                                    <button type="button" id="scaleBtn10" onclick="setGpaScale(10)" class="px-2 py-0.5 text-[11px] font-bold rounded text-royal-900 hover:bg-cream-300 transition">
+                                        10.0 Scale
+                                    </button>
+                                </div>
+                            </div>
+                            <input type="number" id="inputGpa" required min="0" max="4.0" step="0.01" placeholder="Enter value (0.00 - 4.00)"
+                                class="w-full px-3.5 py-2 bg-white border border-cream-400 rounded-lg text-sm text-slate-900 placeholder-slate-400">
+                            <p id="gpaScaleHint" class="text-[11px] text-slate-500 mt-1">Normalized internally to standard 4.0 scale for model inference.</p>
+                        </div>
+
+                        <!-- Assignments & LMS Activity -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="inputAssignments" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1.5">
+                                    Assignments Done (%) <span class="text-red-600">*</span>
+                                </label>
+                                <input type="number" id="inputAssignments" required min="0" max="100" step="0.1" placeholder="0.0 - 100.0"
+                                    class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-400 rounded-lg text-sm text-slate-900 placeholder-slate-400">
+                            </div>
+
+                            <div>
+                                <label for="inputLmsLogins" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1.5">
+                                    LMS Logins / Month <span class="text-red-600">*</span>
+                                </label>
+                                <input type="number" id="inputLmsLogins" required min="0" max="1000" step="1" placeholder="e.g., 35"
+                                    class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-400 rounded-lg text-sm text-slate-900 placeholder-slate-400">
+                            </div>
+                        </div>
+
+                        <!-- Binary Factors -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="inputExtracurricular" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1.5">
+                                    Extracurriculars <span class="text-red-600">*</span>
+                                </label>
+                                <select id="inputExtracurricular" required class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-400 rounded-lg text-sm text-slate-900">
+                                    <option value="" disabled selected>Select status...</option>
+                                    <option value="Yes">Yes (Active)</option>
+                                    <option value="No">No (Inactive)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="inputInternet" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1.5">
+                                    Reliable Internet <span class="text-red-600">*</span>
+                                </label>
+                                <select id="inputInternet" required class="w-full px-3.5 py-2.5 bg-cream-50 border border-cream-400 rounded-lg text-sm text-slate-900">
+                                    <option value="" disabled selected>Select access...</option>
+                                    <option value="Yes">Yes (Consistent)</option>
+                                    <option value="No">No (Limited/Unstable)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="pt-2">
+                            <button type="submit" class="w-full py-3 px-5 bg-royal-900 hover:bg-royal-800 active:bg-royal-950 text-cream-50 font-semibold text-sm rounded-lg shadow transition flex items-center justify-center space-x-2">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <span>Run Prediction &amp; Explainability Analysis</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right Column: Prediction Output & SHAP Explainability -->
+                <div class="lg:col-span-7">
+                    
+                    <!-- Authentic Empty State before any student is evaluated -->
+                    <div id="predictionEmptyState" class="bg-cream-100 border-2 border-dashed border-royal-800/30 rounded-xl p-12 text-center flex flex-col items-center justify-center min-h-[480px]">
+                        <div class="w-16 h-16 rounded-full bg-cream-200 border border-royal-900/20 flex items-center justify-center text-royal-900 mb-4">
+                            <i data-lucide="clipboard-list" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-royal-900 academic-title mb-2">Awaiting Student Input</h3>
+                        <p class="text-sm text-slate-600 max-w-md leading-relaxed">
+                            No prediction is currently active. Enter a student's real academic and behavioral metrics on the left and click <strong>"Run Prediction"</strong> to generate their calibrated success probability, SHAP-style feature attributions, and tailored advising actions.
+                        </p>
+                    </div>
+
+                    <!-- Populated Prediction Results Card (Hidden until user runs prediction) -->
+                    <div id="predictionResultCard" class="hidden bg-white border-2 border-royal-900 rounded-xl shadow-md overflow-hidden space-y-6">
+                        <!-- Top Result Banner -->
+                        <div class="bg-royal-900 text-cream-50 px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <span class="text-xs uppercase tracking-widest text-cream-200 font-semibold block">Assessed Student Record</span>
+                                <h3 id="resStudentId" class="text-xl font-bold academic-title mt-0.5"></h3>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span id="resStatusBadge" class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border"></span>
+                            </div>
+                        </div>
+
+                        <div class="px-6 pb-6 space-y-6">
+                            <!-- Probability Meter -->
+                            <div class="bg-cream-100 border border-cream-300 rounded-xl p-5">
+                                <div class="flex items-end justify-between mb-2">
+                                    <div>
+                                        <span class="text-xs font-bold uppercase tracking-wider text-royal-900 block">Predicted Success Probability</span>
+                                        <span class="text-xs text-slate-600">Decision Threshold: 50.0%</span>
+                                    </div>
+                                    <span id="resProbabilityText" class="text-3xl font-extrabold text-royal-900 academic-title"></span>
+                                </div>
+                                <div class="w-full h-4 bg-cream-300 rounded-full overflow-hidden border border-royal-900/20 p-0.5">
+                                    <div id="resProbabilityBar" class="h-full rounded-full transition-all duration-500 bg-royal-600" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Feature Contribution Breakdown (SHAP-Style Local Explainability) -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-royal-900 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i data-lucide="bar-chart-horizontal" class="w-4 h-4 text-royal-600"></i>
+                                            Local Feature Attribution (Log-Odds Impact)
+                                        </h4>
+                                        <p class="text-xs text-slate-600">How each metric pushes this student above or below baseline expectations</p>
+                                    </div>
+                                    <div class="flex items-center gap-3 text-xs font-medium">
+                                        <span class="flex items-center gap-1 text-royal-800"><span class="w-2.5 h-2.5 rounded-sm bg-royal-600 inline-block"></span> Positive Driver</span>
+                                        <span class="flex items-center gap-1 text-amber-800"><span class="w-2.5 h-2.5 rounded-sm bg-amber-600 inline-block"></span> Risk Factor</span>
+                                    </div>
+                                </div>
+                                <div id="shapContributionsList" class="space-y-2.5 bg-cream-50 p-4 rounded-xl border border-cream-300">
+                                    <!-- Dynamically rendered bars -->
+                                </div>
+                            </div>
+
+                            <!-- Tailored Academic Intervention Recommendations -->
+                            <div class="bg-cream-200/70 border-l-4 border-royal-800 p-4 rounded-r-xl">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-royal-900 mb-2 flex items-center gap-1.5">
+                                    <i data-lucide="lightbulb" class="w-4 h-4 text-royal-800"></i>
+                                    Recommended Academic Advising Actions
+                                </h4>
+                                <ul id="resRecommendationsList" class="text-sm text-slate-800 space-y-1.5 list-disc list-inside">
+                                    <!-- Dynamically populated based on student bottlenecks -->
+                                </ul>
+                            </div>
+
+                            <!-- Action Footer: Add to Roster -->
+                            <div class="pt-2 border-t border-cream-300 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <span class="text-xs text-slate-600">Save this assessment to include in cohort-level analytics &amp; exports.</span>
+                                <button type="button" onclick="addCurrentPredictionToRoster()" class="px-5 py-2.5 bg-royal-800 hover:bg-royal-900 text-cream-50 text-sm font-semibold rounded-lg shadow-sm transition flex items-center justify-center space-x-2">
+                                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                                    <span>Add to Active Roster</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 2: ACTIVE COHORT ROSTER & ANALYTICS    -->
+        <!-- ========================================== -->
+        <section id="view-roster" class="hidden space-y-8">
+            
+            <!-- Top Action Bar for Roster -->
+            <div class="bg-white border-2 border-royal-900/20 rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-royal-900 academic-title">Active Student Cohort &amp; Batch Analytics</h2>
+                    <p class="text-xs text-slate-600">Manage evaluated students, batch-import CSV rosters, or export predictions.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <button onclick="downloadCsvTemplate()" class="px-3.5 py-2 bg-cream-100 hover:bg-cream-200 text-royal-900 border border-royal-900/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+                        <i data-lucide="file-down" class="w-4 h-4 text-royal-800"></i>
+                        <span>Download CSV Template</span>
+                    </button>
+
+                    <label class="cursor-pointer px-3.5 py-2 bg-royal-800 hover:bg-royal-900 text-cream-50 rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>Upload Student CSV</span>
+                        <input type="file" id="rosterCsvInput" accept=".csv" class="hidden" onchange="handleRosterCsvUpload(event)">
+                    </label>
+
+                    <button id="exportRosterBtn" onclick="exportAssessedRosterCsv()" disabled class="px-3.5 py-2 bg-royal-600 hover:bg-royal-700 disabled:opacity-40 disabled:cursor-not-allowed text-cream-50 rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Export Assessed Roster</span>
+                    </button>
+
+                    <button id="clearRosterBtn" onclick="clearRoster()" disabled class="px-3 py-2 bg-cream-200 hover:bg-red-50 text-slate-700 hover:text-red-700 disabled:opacity-40 disabled:cursor-not-allowed border border-cream-400 rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        <span>Clear</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- EMPTY STATE FOR ROSTER (Starts visible since 0 fake records exist) -->
+            <div id="rosterEmptyState" class="bg-cream-100 border-2 border-dashed border-royal-800/30 rounded-xl p-14 text-center flex flex-col items-center justify-center">
+                <div class="w-16 h-16 rounded-full bg-cream-200 border border-royal-900/20 flex items-center justify-center text-royal-900 mb-4">
+                    <i data-lucide="users" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-lg font-bold text-royal-900 academic-title mb-2">No students in roster yet.</h3>
+                <p class="text-sm text-slate-600 max-w-lg mb-6">
+                    Add students via the Single Student Predictor or upload a CSV dataset. The platform starts completely clean without synthetic or pre-populated student rows.
+                </p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button onclick="switchTab('predictor')" class="px-4 py-2.5 bg-royal-900 hover:bg-royal-800 text-cream-50 rounded-lg text-xs font-semibold transition flex items-center gap-2">
+                        <i data-lucide="calculator" class="w-4 h-4"></i>
+                        <span>Assess a Student Manually</span>
+                    </button>
+                    <button onclick="downloadCsvTemplate()" class="px-4 py-2.5 bg-white hover:bg-cream-200 text-royal-900 border border-royal-900/30 rounded-lg text-xs font-semibold transition flex items-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        <span>Get CSV Headers Template</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- POPULATED COHORT ANALYTICS & TABLE (Hidden until roster.length > 0) -->
+            <div id="rosterContentContainer" class="hidden space-y-6">
+                
+                <!-- Real-Time Cohort KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white border-2 border-royal-900/20 rounded-xl p-5 shadow-sm">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">Total Students Assessed</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span id="kpiTotalStudents" class="text-3xl font-extrabold text-royal-900 academic-title">0</span>
+                            <span class="text-xs font-medium text-royal-800 bg-cream-200 px-2 py-0.5 rounded">Active Cohort</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border-2 border-royal-900/20 rounded-xl p-5 shadow-sm">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">On-Track Count</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span id="kpiOnTrackCount" class="text-3xl font-extrabold text-royal-700 academic-title">0</span>
+                            <span id="kpiOnTrackPct" class="text-xs font-semibold text-royal-800 bg-royal-50 px-2 py-0.5 rounded border border-royal-200">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border-2 border-royal-900/20 rounded-xl p-5 shadow-sm">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">At-Risk (Intervention)</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span id="kpiAtRiskCount" class="text-3xl font-extrabold text-amber-700 academic-title">0</span>
+                            <span id="kpiAtRiskPct" class="text-xs font-semibold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border-2 border-royal-900/20 rounded-xl p-5 shadow-sm">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">Avg Success Probability</span>
+                        <div class="mt-2 flex items-baseline justify-between">
+                            <span id="kpiAvgProb" class="text-3xl font-extrabold text-royal-900 academic-title">0.0%</span>
+                            <span class="text-xs text-slate-500">Cohort Mean</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cohort Probability Distribution Breakdown -->
+                <div class="bg-white border-2 border-royal-900/20 rounded-xl p-6 shadow-sm">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-royal-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-4 h-4 text-royal-600"></i>
+                        Cohort Success Probability Distribution
+                    </h3>
+                    <div id="cohortDistributionBars" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Dynamically calculated High / Moderate / High-Risk tiers -->
+                    </div>
+                </div>
+
+                <!-- Roster Table -->
+                <div class="bg-white border-2 border-royal-900/20 rounded-xl shadow-sm overflow-hidden">
+                    <div class="bg-cream-200 px-6 py-4 border-b border-cream-300 flex items-center justify-between">
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-royal-900">Evaluated Student Roster</h3>
+                        <span class="text-xs text-slate-600">Click "Inspect" on any row to view full SHAP explainability</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-royal-900 text-cream-50 text-xs uppercase tracking-wider">
+                                    <th class="py-3 px-4 font-semibold">Student ID</th>
+                                    <th class="py-3 px-4 font-semibold">Attendance</th>
+                                    <th class="py-3 px-4 font-semibold">Study Hrs/Wk</th>
+                                    <th class="py-3 px-4 font-semibold">Norm. GPA (4.0)</th>
+                                    <th class="py-3 px-4 font-semibold">Assignments</th>
+                                    <th class="py-3 px-4 font-semibold">LMS Logins</th>
+                                    <th class="py-3 px-4 font-semibold">Success Prob.</th>
+                                    <th class="py-3 px-4 font-semibold">Status</th>
+                                    <th class="py-3 px-4 font-semibold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rosterTableBody" class="divide-y divide-cream-300 text-sm">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TAB 3: LIVE CLIENT-SIDE ML ENGINE          -->
+        <!-- ========================================== -->
+        <section id="view-engine" class="hidden space-y-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Column: Train Custom Logistic Regression Model in Browser -->
+                <div class="lg:col-span-6 bg-white border-2 border-royal-900/20 rounded-xl shadow-sm overflow-hidden">
+                    <div class="bg-royal-900 text-cream-50 px-6 py-4">
+                        <h2 class="text-lg font-bold academic-title flex items-center gap-2">
+                            <i data-lucide="cpu" class="w-5 h-5"></i>
+                            In-Browser Logistic Regression Trainer
+                        </h2>
+                        <p class="text-xs text-cream-200 mt-0.5">
+                            Train a custom model via Gradient Descent using your own historical CSV dataset containing ground-truth <code class="bg-royal-950 px-1.5 py-0.5 rounded">outcome</code> labels (0 or 1).
+                        </p>
+                    </div>
+
+                    <div class="p-6 space-y-5">
+                        <!-- Required CSV Schema Specification -->
+                        <div class="bg-cream-100 border border-cream-300 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-royal-900">Required CSV Schema</span>
+                                <button onclick="downloadCsvTemplate()" class="text-xs font-semibold text-royal-600 hover:underline flex items-center gap-1">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Headers Template
+                                </button>
+                            </div>
+                            <code class="block text-[11px] bg-white p-2.5 rounded border border-cream-300 text-royal-950 font-mono overflow-x-auto whitespace-nowrap">
+                                student_id,attendance_rate,study_hours_per_week,previous_gpa,assignments_completed,lms_logins_per_month,extracurricular,internet_access,outcome
+                            </code>
+                            <p class="text-[11px] text-slate-600 mt-2">
+                                • <strong>outcome</strong> column (0 = At-Risk/Fail, 1 = Success/Pass) is required for supervised training.<br>
+                                • When uploading to the Roster tab, the <strong>outcome</strong> column is optional.
+                            </p>
+                        </div>
+
+                        <!-- Hyperparameters Configuration -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="trainLearningRate" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1">
+                                    Learning Rate (α)
+                                </label>
+                                <input type="number" id="trainLearningRate" value="0.15" min="0.001" max="2.0" step="0.01"
+                                    class="w-full px-3 py-2 bg-cream-50 border border-cream-400 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label for="trainEpochs" class="block text-xs font-bold uppercase tracking-wider text-royal-900 mb-1">
+                                    Training Epochs
+                                </label>
+                                <input type="number" id="trainEpochs" value="300" min="50" max="5000" step="50"
+                                    class="w-full px-3 py-2 bg-cream-50 border border-cream-400 rounded-lg text-sm">
+                            </div>
+                        </div>
+
+                        <!-- File Upload & Train Trigger -->
+                        <div class="border-2 border-dashed border-royal-800/30 bg-cream-50 rounded-xl p-6 text-center">
+                            <i data-lucide="database" class="w-8 h-8 text-royal-800 mx-auto mb-2"></i>
+                            <label class="cursor-pointer inline-flex items-center space-x-2 px-4 py-2.5 bg-royal-900 hover:bg-royal-800 text-cream-50 text-xs font-semibold rounded-lg shadow transition">
+                                <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                                <span>Select Labeled CSV &amp; Train Model</span>
+                                <input type="file" id="trainCsvInput" accept=".csv" class="hidden" onchange="handleTrainModelFromCsv(event)">
+                            </label>
+                            <p id="trainingFileName" class="text-xs text-slate-500 mt-2">No training dataset uploaded yet.</p>
+                        </div>
+
+                        <!-- Training Metrics Output (Hidden until user trains a dataset) -->
+                        <div id="trainingMetricsPanel" class="hidden bg-cream-100 border border-royal-800/30 rounded-xl p-4 space-y-3">
+                            <div class="flex items-center justify-between border-b border-cream-300 pb-2">
+                                <span class="text-xs font-bold uppercase tracking-wider text-royal-900">Last Training Run Summary</span>
+                                <span id="trainSamplesBadge" class="text-xs font-semibold bg-royal-900 text-cream-50 px-2 py-0.5 rounded"></span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                <div class="bg-white p-2.5 rounded border border-cream-300">
+                                    <span class="text-[11px] text-slate-500 block">Training Accuracy</span>
+                                    <span id="trainMetricAcc" class="text-lg font-bold text-royal-900">—</span>
+                                </div>
+                                <div class="bg-white p-2.5 rounded border border-cream-300">
+                                    <span class="text-[11px] text-slate-500 block">Final Log-Loss</span>
+                                    <span id="trainMetricLoss" class="text-lg font-bold text-royal-900">—</span>
+                                </div>
+                                <div class="bg-white p-2.5 rounded border border-cream-300">
+                                    <span class="text-[11px] text-slate-500 block">F1-Score</span>
+                                    <span id="trainMetricF1" class="text-lg font-bold text-royal-900">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Live Feature Weights & Manual Calibration -->
+                <div class="lg:col-span-6 bg-white border-2 border-royal-900/20 rounded-xl shadow-sm overflow-hidden">
+                    <div class="bg-cream-200 border-b border-cream-300 px-6 py-4 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-royal-900 academic-title">Model Coefficients (Standardized Weights)</h2>
+                            <p class="text-xs text-slate-600">Inspect or fine-tune the active Logistic Regression weights</p>
+                        </div>
+                        <button onclick="resetToDefaultWeights()" class="text-xs font-semibold text-royal-800 hover:text-royal-600 underline">
+                            Restore Default Baseline
+                        </button>
+                    </div>
+
+                    <div class="p-6 space-y-4">
+                        <div id="weightsEditorList" class="space-y-3">
+                            <!-- Dynamically generated weight sliders/inputs -->
+                        </div>
+
+                        <div class="pt-4 border-t border-cream-300 flex items-center justify-between">
+                            <p class="text-xs text-slate-600">Changes immediately update all predictions and active roster scores.</p>
+                            <button onclick="applyManualWeights()" class="px-4 py-2 bg-royal-900 hover:bg-royal-800 text-cream-50 text-xs font-semibold rounded-lg shadow transition">
+                                Apply Weight Adjustments
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-cream-200 border-t border-cream-300 mt-12 py-5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 gap-2">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-royal-900"></span>
+                <span class="font-semibold text-royal-900">Student Success Prediction Platform</span>
+                <span>— Zero-Synthetic-Data Prototype</span>
+            </div>
+            <div>
+                All calculations execute locally in-browser via calibrated Logistic Regression.
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========================================== -->
+    <!-- CLIENT-SIDE ML & APPLICATION LOGIC         -->
+    <!-- ========================================== -->
+    <script>
+        /**
+         * 1. STATE & CALIBRATED BASELINE LOGISTIC REGRESSION MODEL
+         * Starts with zero student records (authentic clean state).
+         * Feature standardization parameters allow interpretable z-score log-odds contributions.
+         */
+        const FEATURE_SCHEMA = [
+            { key: 'attendance_rate',       label: 'Attendance Rate (%)',      mean: 80.0, std: 12.0, defaultWeight: 0.95 },
+            { key: 'study_hours_per_week',  label: 'Study Hours / Week',       mean: 12.0, std: 6.0,  defaultWeight: 0.75 },
+            { key: 'previous_gpa',          label: 'Previous GPA (4.0 Scale)', mean: 2.75, std: 0.65, defaultWeight: 1.15 },
+            { key: 'assignments_completed', label: 'Assignments Completed (%)',mean: 82.0, std: 14.0, defaultWeight: 0.85 },
+            { key: 'lms_logins_per_month',  label: 'LMS Logins / Month',       mean: 40.0, std: 20.0, defaultWeight: 0.45 },
+            { key: 'extracurricular_num',   label: 'Extracurricular Activity', mean: 0.50, std: 0.50, defaultWeight: 0.25 },
+            { key: 'internet_access_num',   label: 'Reliable Internet Access', mean: 0.80, std: 0.40, defaultWeight: 0.40 }
+        ];
+
+        let modelState = {
+            name: 'Calibrated Logistic Baseline (v1.0)',
+            bias: 0.35, // Baseline log-odds for an average student
+            weights: {},
+            stats: {}
+        };
+
+        // Initialize baseline weights & standardization stats
+        function initBaselineModel() {
+            FEATURE_SCHEMA.forEach(f => {
+                modelState.weights[f.key] = f.defaultWeight;
+                modelState.stats[f.key] = { mean: f.mean, std: f.std };
+            });
+            modelState.bias = 0.35;
+            modelState.name = 'Calibrated Logistic Baseline (v1.0)';
+            updateModelHeaderStatus();
+            renderWeightsEditor();
+        }
+
+        // Active Roster State (Strictly starts empty - no fake students)
+        let activeRoster = [];
+        // Last evaluated single student prediction
+        let currentAssessedStudent = null;
+        // GPA Input Scale (4 or 10)
+        let currentGpaScale = 4;
+
+        /**
+         * 2. MATHEMATICAL & ML INFERENCE FUNCTIONS
+         */
+        function sigmoid(z) {
+            // Numerically stable sigmoid
+            if (z >= 0) {
+                const ez = Math.exp(-z);
+                return 1 / (1 + ez);
+            } else {
+                const ez = Math.exp(z);
+                return ez / (1 + ez);
+            }
+        }
+
+        /**
+         * Predicts student success probability and computes exact per-feature log-odds (SHAP-style linear attribution)
+         */
+        function evaluateStudentRecord(rawInput) {
+            const extracurricular_num = String(rawInput.extracurricular).toLowerCase() === 'yes' || rawInput.extracurricular === '1' ? 1 : 0;
+            const internet_access_num = String(rawInput.internet_access).toLowerCase() === 'yes' || rawInput.internet_access === '1' ? 1 : 0;
+
+            const numericMap = {
+                attendance_rate: parseFloat(rawInput.attendance_rate),
+                study_hours_per_week: parseFloat(rawInput.study_hours_per_week),
+                previous_gpa: parseFloat(rawInput.previous_gpa), // Already normalized to 4.0 scale
+                assignments_completed: parseFloat(rawInput.assignments_completed),
+                lms_logins_per_month: parseFloat(rawInput.lms_logins_per_month),
+                extracurricular_num,
+                internet_access_num
+            };
+
+            let logOdds = modelState.bias;
+            const contributions = [];
+
+            FEATURE_SCHEMA.forEach(f => {
+                const val = numericMap[f.key];
+                const stat = modelState.stats[f.key];
+                const stdSafe = stat.std > 1e-6 ? stat.std : 1.0;
+                const zScore = (val - stat.mean) / stdSafe;
+                const weight = modelState.weights[f.key];
+                const impact = zScore * weight; // Exact additive contribution in log-odds space
+                logOdds += impact;
+
+                contributions.push({
+                    key: f.key,
+                    label: f.label,
+                    rawValue: val,
+                    impact: impact
+                });
+            });
+
+            // Sort contributions by absolute magnitude
+            contributions.sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
+
+            const probability = sigmoid(logOdds);
+            const isSuccess = probability >= 0.5;
+
+            return {
+                student_id: String(rawInput.student_id).trim(),
+                attendance_rate: numericMap.attendance_rate,
+                study_hours_per_week: numericMap.study_hours_per_week,
+                previous_gpa: numericMap.previous_gpa,
+                assignments_completed: numericMap.assignments_completed,
+                lms_logins_per_month: numericMap.lms_logins_per_month,
+                extracurricular: extracurricular_num ? 'Yes' : 'No',
+                internet_access: internet_access_num ? 'Yes' : 'No',
+                probability: probability,
+                status: isSuccess ? 'On Track' : 'At-Risk',
+                contributions: contributions,
+                recommendations: generateTailoredRecommendations(numericMap, probability)
+            };
+        }
+
+        /**
+         * Generates tailored, authentic academic advising recommendations based on student metrics
+         */
+        function generateTailoredRecommendations(metrics, probability) {
+            const recs = [];
+            if (metrics.attendance_rate < 75) {
+                recs.push(`Critical Attendance Alert (${metrics.attendance_rate.toFixed(1)}%): Schedule an immediate check-in with the student's academic advisor to identify attendance barriers.`);
+            }
+            if (metrics.assignments_completed < 75) {
+                recs.push(`Assignment Completion Gap (${metrics.assignments_completed.toFixed(1)}%): Enroll student in structured weekly study hall or milestone tracking.`);
+            }
+            if (metrics.previous_gpa < 2.3) {
+                recs.push(`Foundational GPA Support (${metrics.previous_gpa.toFixed(2)} / 4.0): Recommend peer tutoring for core curriculum prerequisites.`);
+            }
+            if (metrics.study_hours_per_week < 8) {
+                recs.push(`Low Independent Study Volume (${metrics.study_hours_per_week} hrs/wk): Assist student in building a structured 12–15 hour weekly time-management plan.`);
+            }
+            if (metrics.lms_logins_per_month < 20) {
+                recs.push(`Low Digital LMS Engagement (${metrics.lms_logins_per_month} logins/mo): Verify course portal access and enable automated syllabus notifications.`);
+            }
+            if (metrics.internet_access_num === 0) {
+                recs.push(`Connectivity Barrier: Connect student with campus IT loaner hotspot program or extended library lab hours.`);
+            }
+
+            if (recs.length === 0) {
+                if (probability >= 0.80) {
+                    recs.push(`High-Performing Trajectory: Student metrics exceed benchmark thresholds. Consider recommending honors seminars, research assistantships, or peer mentoring roles.`);
+                } else {
+                    recs.push(`Steady Academic Progress: Maintain current advising cadence and monitor mid-semester assessment checkpoints.`);
+                }
+            }
+            return recs;
+        }
+
+        /**
+         * 3. SINGLE STUDENT PREDICTOR UI HANDLERS
+         */
+        function setGpaScale(scale) {
+            const gpaInput = document.getElementById('inputGpa');
+            const btn4 = document.getElementById('scaleBtn4');
+            const btn10 = document.getElementById('scaleBtn10');
+            const hint = document.getElementById('gpaScaleHint');
+
+            const currentVal = parseFloat(gpaInput.value);
+
+            if (scale === 10 && currentGpaScale === 4) {
+                currentGpaScale = 10;
+                gpaInput.max = "10.0";
+                gpaInput.placeholder = "Enter value (0.00 - 10.00)";
+                if (!isNaN(currentVal)) gpaInput.value = Math.min(10, (currentVal * 2.5)).toFixed(2);
+                btn10.className = "px-2 py-0.5 text-[11px] font-bold rounded bg-royal-900 text-cream-50 transition";
+                btn4.className = "px-2 py-0.5 text-[11px] font-bold rounded text-royal-900 hover:bg-cream-300 transition";
+                hint.textContent = "Using 10.0 CGPA scale (automatically converted to 4.0 scale for inference).";
+            } else if (scale === 4 && currentGpaScale === 10) {
+                currentGpaScale = 4;
+                gpaInput.max = "4.0";
+                gpaInput.placeholder = "Enter value (0.00 - 4.00)";
+                if (!isNaN(currentVal)) gpaInput.value = Math.min(4.0, (currentVal / 2.5)).toFixed(2);
+                btn4.className = "px-2 py-0.5 text-[11px] font-bold rounded bg-royal-900 text-cream-50 transition";
+                btn10.className = "px-2 py-0.5 text-[11px] font-bold rounded text-royal-900 hover:bg-cream-300 transition";
+                hint.textContent = "Normalized internally to standard 4.0 scale for model inference.";
+            }
+        }
+
+        function handleRunPrediction(e) {
+            e.preventDefault();
+
+            const rawGpa = parseFloat(document.getElementById('inputGpa').value);
+            const normalizedGpa = currentGpaScale === 10 ? (rawGpa / 2.5) : rawGpa;
+
+            const rawStudent = {
+                student_id: document.getElementById('inputStudentId').value,
+                attendance_rate: document.getElementById('inputAttendance').value,
+                study_hours_per_week: document.getElementById('inputStudyHours').value,
+                previous_gpa: normalizedGpa,
+                assignments_completed: document.getElementById('inputAssignments').value,
+                lms_logins_per_month: document.getElementById('inputLmsLogins').value,
+                extracurricular: document.getElementById('inputExtracurricular').value,
+                internet_access: document.getElementById('inputInternet').value
+            };
+
+            currentAssessedStudent = evaluateStudentRecord(rawStudent);
+            renderPredictionOutput(currentAssessedStudent);
+        }
+
+        function renderPredictionOutput(result) {
+            document.getElementById('predictionEmptyState').classList.add('hidden');
+            const card = document.getElementById('predictionResultCard');
+            card.classList.remove('hidden');
+
+            document.getElementById('resStudentId').textContent = result.student_id;
+
+            const pct = (result.probability * 100).toFixed(1) + '%';
+            document.getElementById('resProbabilityText').textContent = pct;
+
+            const bar = document.getElementById('resProbabilityBar');
+            bar.style.width = `${Math.max(4, result.probability * 100)}%`;
+
+            const badge = document.getElementById('resStatusBadge');
+            if (result.status === 'On Track') {
+                badge.textContent = 'On Track (Success Likely)';
+                badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-cream-50 text-royal-900 border border-cream-200';
+                bar.className = 'h-full rounded-full transition-all duration-500 bg-royal-600';
+            } else {
+                badge.textContent = 'At-Risk (Intervention Needed)';
+                badge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-950 border border-amber-300';
+                bar.className = 'h-full rounded-full transition-all duration-500 bg-amber-600';
+            }
+
+            // Render SHAP-style Local Feature Attributions
+            const shapContainer = document.getElementById('shapContributionsList');
+            shapContainer.innerHTML = '';
+
+            const maxAbsImpact = Math.max(0.5, ...result.contributions.map(c => Math.abs(c.impact)));
+
+            result.contributions.forEach(c => {
+                const isPositive = c.impact >= 0;
+                const widthPct = Math.min(100, Math.round((Math.abs(c.impact) / maxAbsImpact) * 100));
+                const sign = isPositive ? '+' : '';
+                const formattedVal = c.key.includes('_num')
+                    ? (c.rawValue === 1 ? 'Yes' : 'No')
+                    : Number(c.rawValue).toFixed(1);
+
+                const row = document.createElement('div');
+                row.className = 'text-xs space-y-1';
+                row.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-semibold text-royal-950">${c.label} <span class="font-normal text-slate-500">(${formattedVal})</span></span>
+                        <span class="font-mono font-bold ${isPositive ? 'text-royal-700' : 'text-amber-800'}">${sign}${c.impact.toFixed(2)} log-odds</span>
+                    </div>
+                    <div class="w-full bg-cream-200 h-2.5 rounded-full overflow-hidden flex">
+                        <div class="${isPositive ? 'bg-royal-600' : 'bg-amber-600'} h-full rounded-full transition-all duration-300" style="width: ${ Math.max(4, widthPct) }%"></div>
+                    </div>
+                `;
+                shapContainer.appendChild(row);
+            });
+
+            // Render Recommendations
+            const recList = document.getElementById('resRecommendationsList');
+            recList.innerHTML = '';
+            result.recommendations.forEach(r => {
+                const li = document.createElement('li');
+                li.textContent = r;
+                recList.appendChild(li);
+            });
+
+            lucide.createIcons();
+        }
+
+        function resetPredictorForm() {
+            document.getElementById('studentAssessmentForm').reset();
+            currentAssessedStudent = null;
+            document.getElementById('predictionResultCard').classList.add('hidden');
+            document.getElementById('predictionEmptyState').classList.remove('hidden');
+        }
+
+        function addCurrentPredictionToRoster() {
+            if (!currentAssessedStudent) return;
+
+            // Update if student_id already exists, otherwise push
+            const existingIdx = activeRoster.findIndex(s => s.student_id.toLowerCase() === currentAssessedStudent.student_id.toLowerCase());
+            if (existingIdx >= 0) {
+                activeRoster[existingIdx] = { ...currentAssessedStudent };
+                showNotification(`Updated existing record for "${currentAssessedStudent.student_id}" in the Active Roster.`);
+            } else {
+                activeRoster.push({ ...currentAssessedStudent });
+                showNotification(`Added "${currentAssessedStudent.student_id}" to the Active Cohort Roster.`);
+            }
+
+            updateRosterView();
+        }
+
+        /**
+         * 4. ACTIVE COHORT ROSTER & ANALYTICS FUNCTIONS
+         */
+        function recalculateEntireRoster() {
+            activeRoster = activeRoster.map(student => evaluateStudentRecord(student));
+            if (currentAssessedStudent) {
+                currentAssessedStudent = evaluateStudentRecord(currentAssessedStudent);
+                renderPredictionOutput(currentAssessedStudent);
+            }
+            updateRosterView();
+        }
+
+        function updateRosterView() {
+            const count = activeRoster.length;
+            document.getElementById('rosterCountBadge').textContent = count;
+
+            const emptyState = document.getElementById('rosterEmptyState');
+            const contentContainer = document.getElementById('rosterContentContainer');
+            const exportBtn = document.getElementById('exportRosterBtn');
+            const clearBtn = document.getElementById('clearRosterBtn');
+
+            if (count === 0) {
+                emptyState.classList.remove('hidden');
+                contentContainer.classList.add('hidden');
+                exportBtn.disabled = true;
+                clearBtn.disabled = true;
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            contentContainer.classList.remove('hidden');
+            exportBtn.disabled = false;
+            clearBtn.disabled = false;
+
+            // Compute Real Cohort KPIs
+            const onTrackCount = activeRoster.filter(s => s.status === 'On Track').length;
+            const atRiskCount = count - onTrackCount;
+            const avgProb = activeRoster.reduce((acc, s) => acc + s.probability, 0) / count;
+
+            document.getElementById('kpiTotalStudents').textContent = count;
+            document.getElementById('kpiOnTrackCount').textContent = onTrackCount;
+            document.getElementById('kpiOnTrackPct').textContent = `${((onTrackCount / count) * 100).toFixed(1)}%`;
+            document.getElementById('kpiAtRiskCount').textContent = atRiskCount;
+            document.getElementById('kpiAtRiskPct').textContent = `${((atRiskCount / count) * 100).toFixed(1)}%`;
+            document.getElementById('kpiAvgProb').textContent = `${(avgProb * 100).toFixed(1)}%`;
+
+            // Render Distribution Tiers
+            const highTier = activeRoster.filter(s => s.probability >= 0.75).length;
+            const modTier = activeRoster.filter(s => s.probability >= 0.50 && s.probability < 0.75).length;
+            const lowTier = activeRoster.filter(s => s.probability < 0.50).length;
+
+            const distContainer = document.getElementById('cohortDistributionBars');
+            distContainer.innerHTML = `
+                <div class="bg-cream-50 p-4 rounded-lg border border-cream-300">
+                    <div class="flex justify-between text-xs font-bold text-royal-900 mb-1">
+                        <span>High Confidence (≥ 75%)</span>
+                        <span>${highTier} (${((highTier/count)*100).toFixed(0)}%)</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-cream-200 rounded-full overflow-hidden">
+                        <div class="bg-royal-800 h-full" style="width: ${(highTier/count)*100}%"></div>
+                    </div>
+                </div>
+                <div class="bg-cream-50 p-4 rounded-lg border border-cream-300">
+                    <div class="flex justify-between text-xs font-bold text-royal-700 mb-1">
+                        <span>Moderate On-Track (50% – 74%)</span>
+                        <span>${modTier} (${((modTier/count)*100).toFixed(0)}%)</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-cream-200 rounded-full overflow-hidden">
+                        <div class="bg-royal-600 h-full" style="width: ${(modTier/count)*100}%"></div>
+                    </div>
+                </div>
+                <div class="bg-cream-50 p-4 rounded-lg border border-cream-300">
+                    <div class="flex justify-between text-xs font-bold text-amber-900 mb-1">
+                        <span>At-Risk (< 50%)</span>
+                        <span>${lowTier} (${((lowTier/count)*100).toFixed(0)}%)</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-cream-200 rounded-full overflow-hidden">
+                        <div class="bg-amber-600 h-full" style="width: ${(lowTier/count)*100}%"></div>
+                    </div>
+                </div>
+            `;
+
+            // Render Roster Table Rows
+            const tbody = document.getElementById('rosterTableBody');
+            tbody.innerHTML = '';
+
+            activeRoster.forEach((s, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-cream-100/80 transition';
+                const badgeClass = s.status === 'On Track'
+                    ? 'bg-royal-50 text-royal-900 border-royal-300'
+                    : 'bg-amber-50 text-amber-900 border-amber-300';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-royal-950">${escapeHtml(s.student_id)}</td>
+                    <td class="py-3 px-4">${s.attendance_rate.toFixed(1)}%</td>
+                    <td class="py-3 px-4">${s.study_hours_per_week.toFixed(1)}</td>
+                    <td class="py-3 px-4 font-mono">${s.previous_gpa.toFixed(2)}</td>
+                    <td class="py-3 px-4">${s.assignments_completed.toFixed(1)}%</td>
+                    <td class="py-3 px-4">${s.lms_logins_per_month}</td>
+                    <td class="py-3 px-4 font-bold text-royal-900">${(s.probability * 100).toFixed(1)}%</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2.5 py-0.5 text-xs font-bold rounded-full border ${badgeClass}">
+                            ${s.status}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-right space-x-2 whitespace-nowrap">
+                        <button onclick="inspectRosterStudent(${idx})" class="text-xs font-semibold text-royal-700 hover:text-royal-950 underline">
+                            Inspect
+                        </button>
+                        <button onclick="removeRosterStudent(${idx})" class="text-xs font-semibold text-slate-400 hover:text-red-600">
+                            Remove
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function inspectRosterStudent(idx) {
+            const student = activeRoster[idx];
+            if (!student) return;
+
+            // Populate form & show explainability on Predictor tab
+            setGpaScale(4);
+            document.getElementById('inputStudentId').value = student.student_id;
+            document.getElementById('inputAttendance').value = student.attendance_rate;
+            document.getElementById('inputStudyHours').value = student.study_hours_per_week;
+            document.getElementById('inputGpa').value = student.previous_gpa.toFixed(2);
+            document.getElementById('inputAssignments').value = student.assignments_completed;
+            document.getElementById('inputLmsLogins').value = student.lms_logins_per_month;
+            document.getElementById('inputExtracurricular').value = student.extracurricular;
+            document.getElementById('inputInternet').value = student.internet_access;
+
+            currentAssessedStudent = student;
+            renderPredictionOutput(student);
+            switchTab('predictor');
+        }
+
+        function removeRosterStudent(idx) {
+            activeRoster.splice(idx, 1);
+            updateRosterView();
+        }
+
+        function clearRoster() {
+            activeRoster = [];
+            updateRosterView();
+            showNotification('Cleared all student records from the Active Roster.');
+        }
+
+        /**
+         * 5. CSV TEMPLATE, PARSING, BATCH IMPORT & EXPORT
+         */
+        function downloadCsvTemplate() {
+            const headers = "student_id,attendance_rate,study_hours_per_week,previous_gpa,assignments_completed,lms_logins_per_month,extracurricular,internet_access,outcome\n";
+            const blob = new Blob([headers], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'student_success_template_headers.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('Downloaded clean CSV headers template. Populate it with your real student rows to upload or train.');
+        }
+
+        function parseCsvText(csvText) {
+            const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length < 2) {
+                throw new Error('CSV file must contain a header row and at least one data row.');
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const requiredCols = [
+                'student_id', 'attendance_rate', 'study_hours_per_week',
+                'previous_gpa', 'assignments_completed', 'lms_logins_per_month',
+                'extracurricular', 'internet_access'
+            ];
+
+            for (const req of requiredCols) {
+                if (!headers.includes(req)) {
+                    throw new Error(`Missing required column header: "${req}"`);
+                }
+            }
+
+            const rows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.length < requiredCols.length) continue;
+
+                const rowObj = {};
+                headers.forEach((h, idx) => {
+                    rowObj[h] = values[idx];
+                });
+
+                // Normalize GPA if > 4.0 (e.g., 10-point scale)
+                let gpa = parseFloat(rowObj.previous_gpa);
+                if (gpa > 4.0) gpa = gpa / 2.5;
+                rowObj.previous_gpa = gpa;
+
+                rows.push(rowObj);
+            }
+
+            if (rows.length === 0) {
+                throw new Error('No valid student data rows found in the CSV file.');
+            }
+            return { headers, rows };
+        }
+
+        function handleRosterCsvUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const { rows } = parseCsvText(e.target.result);
+                    let addedCount = 0;
+                    rows.forEach(r => {
+                        const evaluated = evaluateStudentRecord(r);
+                        activeRoster.push(evaluated);
+                        addedCount++;
+                    });
+                    updateRosterView();
+                    showNotification(`Successfully imported and evaluated ${addedCount} student record(s) from "${file.name}".`);
+                } catch (err) {
+                    showNotification(err.message, true);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportAssessedRosterCsv() {
+            if (activeRoster.length === 0) return;
+
+            const headers = [
+                'student_id', 'attendance_rate', 'study_hours_per_week',
+                'previous_gpa_4_scale', 'assignments_completed', 'lms_logins_per_month',
+                'extracurricular', 'internet_access', 'predicted_probability', 'predicted_status'
+            ];
+
+            const csvRows = [headers.join(',')];
+            activeRoster.forEach(s => {
+                csvRows.push([
+                    `"${s.student_id.replace(/"/g, '""')}"`,
+                    s.attendance_rate.toFixed(1),
+                    s.study_hours_per_week.toFixed(1),
+                    s.previous_gpa.toFixed(2),
+                    s.assignments_completed.toFixed(1),
+                    s.lms_logins_per_month,
+                    s.extracurricular,
+                    s.internet_access,
+                    s.probability.toFixed(4),
+                    `"${s.status}"`
+                ].join(','));
+            });
+
+            const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `assessed_student_cohort_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        /**
+         * 6. CLIENT-SIDE LOGISTIC REGRESSION TRAINING ENGINE (TAB 3)
+         */
+        function handleTrainModelFromCsv(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('trainingFileName').textContent = `Selected: ${file.name}`;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const { headers, rows } = parseCsvText(e.target.result);
+                    if (!headers.includes('outcome')) {
+                        throw new Error('Supervised training requires an "outcome" column (0 or 1) in your CSV.');
+                    }
+
+                    const lr = parseFloat(document.getElementById('trainLearningRate').value) || 0.15;
+                    const epochs = parseInt(document.getElementById('trainEpochs').value, 10) || 300;
+
+                    trainLogisticRegressionInBrowser(rows, lr, epochs, file.name);
+                } catch (err) {
+                    showNotification(err.message, true);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function trainLogisticRegressionInBrowser(rows, learningRate, epochs, sourceFileName) {
+            const n = rows.length;
+            const parsedFeatures = rows.map(r => ({
+                attendance_rate: parseFloat(r.attendance_rate),
+                study_hours_per_week: parseFloat(r.study_hours_per_week),
+                previous_gpa: parseFloat(r.previous_gpa),
+                assignments_completed: parseFloat(r.assignments_completed),
+                lms_logins_per_month: parseFloat(r.lms_logins_per_month),
+                extracurricular_num: (String(r.extracurricular).toLowerCase() === 'yes' || r.extracurricular === '1') ? 1 : 0,
+                internet_access_num: (String(r.internet_access).toLowerCase() === 'yes' || r.internet_access === '1') ? 1 : 0,
+                y: parseInt(r.outcome, 10) === 1 ? 1 : 0
+            }));
+
+            // Compute dataset mean & std for each feature
+            const newStats = {};
+            FEATURE_SCHEMA.forEach(f => {
+                const vals = parsedFeatures.map(p => p[f.key]);
+                const mean = vals.reduce((a, b) => a + b, 0) / n;
+                const variance = vals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+                const std = Math.sqrt(variance) > 1e-5 ? Math.sqrt(variance) : 1.0;
+                newStats[f.key] = { mean, std };
+            });
+
+            // Initialize weights to 0
+            const weights = {};
+            FEATURE_SCHEMA.forEach(f => weights[f.key] = 0.0);
+            let bias = 0.0;
+
+            // Gradient Descent Loop
+            let finalLoss = 0;
+            for (let ep = 0; ep < epochs; ep++) {
+                let gradBias = 0;
+                const gradW = {};
+                FEATURE_SCHEMA.forEach(f => gradW[f.key] = 0.0);
+                let epochLoss = 0;
+
+                for (let i = 0; i < n; i++) {
+                    const sample = parsedFeatures[i];
+                    let z = bias;
+                    FEATURE_SCHEMA.forEach(f => {
+                        const zVal = (sample[f.key] - newStats[f.key].mean) / newStats[f.key].std;
+                        z += weights[f.key] * zVal;
+                    });
+
+                    const pred = sigmoid(z);
+                    const err = pred - sample.y;
+                    gradBias += err;
+
+                    FEATURE_SCHEMA.forEach(f => {
+                        const zVal = (sample[f.key] - newStats[f.key].mean) / newStats[f.key].std;
+                        gradW[f.key] += err * zVal;
+                    });
+
+                    const clippedPred = Math.min(1 - 1e-7, Math.max(1e-7, pred));
+                    epochLoss += -(sample.y * Math.log(clippedPred) + (1 - sample.y) * Math.log(1 - clippedPred));
+                }
+
+                bias -= learningRate * (gradBias / n);
+                FEATURE_SCHEMA.forEach(f => {
+                    weights[f.key] -= learningRate * (gradW[f.key] / n);
+                });
+                finalLoss = epochLoss / n;
+            }
+
+            // Compute Training Accuracy & F1
+            let tp = 0, fp = 0, fn = 0, correct = 0;
+            for (let i = 0; i < n; i++) {
+                const sample = parsedFeatures[i];
+                let z = bias;
+                FEATURE_SCHEMA.forEach(f => {
+                    const zVal = (sample[f.key] - newStats[f.key].mean) / newStats[f.key].std;
+                    z += weights[f.key] * zVal;
+                });
+                const predLabel = sigmoid(z) >= 0.5 ? 1 : 0;
+                if (predLabel === sample.y) correct++;
+                if (predLabel === 1 && sample.y === 1) tp++;
+                if (predLabel === 1 && sample.y === 0) fp++;
+                if (predLabel === 0 && sample.y === 1) fn++;
+            }
+
+            const accuracy = (correct / n) * 100;
+            const precision = (tp + fp) > 0 ? tp / (tp + fp) : 0;
+            const recall = (tp + fn) > 0 ? tp / (tp + fn) : 0;
+            const f1 = (precision + recall) > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+
+            // Update global model state
+            modelState.weights = weights;
+            modelState.stats = newStats;
+            modelState.bias = bias;
+            modelState.name = `Custom Trained Model (${n} rows from ${sourceFileName})`;
+
+            updateModelHeaderStatus();
+            renderWeightsEditor();
+            recalculateEntireRoster();
+
+            // Display training metrics
+            document.getElementById('trainingMetricsPanel').classList.remove('hidden');
+            document.getElementById('trainSamplesBadge').textContent = `${n} Samples Trained`;
+            document.getElementById('trainMetricAcc').textContent = `${accuracy.toFixed(1)}%`;
+            document.getElementById('trainMetricLoss').textContent = finalLoss.toFixed(4);
+            document.getElementById('trainMetricF1').textContent = f1.toFixed(3);
+
+            showNotification(`Trained custom Logistic Regression model on ${n} records (Accuracy: ${accuracy.toFixed(1)}%).`);
+        }
+
+        function renderWeightsEditor() {
+            const container = document.getElementById('weightsEditorList');
+            container.innerHTML = '';
+
+            FEATURE_SCHEMA.forEach(f => {
+                const w = modelState.weights[f.key];
+                const row = document.createElement('div');
+                row.className = 'bg-cream-50 p-3 rounded-lg border border-cream-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2';
+                row.innerHTML = `
+                    <div>
+                        <span class="text-xs font-bold text-royal-950 block">${f.label}</span>
+                        <span class="text-[11px] text-slate-500">Center: ${modelState.stats[f.key].mean.toFixed(1)} | Std: ${modelState.stats[f.key].std.toFixed(2)}</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="number" step="0.05" id="weightInput_${f.key}" value="${w.toFixed(2)}"
+                            class="w-24 px-2.5 py-1.5 bg-white border border-cream-400 rounded text-sm font-mono text-right text-royal-900 font-bold">
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function applyManualWeights() {
+            FEATURE_SCHEMA.forEach(f => {
+                const el = document.getElementById(`weightInput_${f.key}`);
+                if (el) {
+                    const val = parseFloat(el.value);
+                    if (!isNaN(val)) modelState.weights[f.key] = val;
+                }
+            });
+            modelState.name = 'Custom Calibrated Weights (Manual)';
+            updateModelHeaderStatus();
+            recalculateEntireRoster();
+            showNotification('Applied custom feature weights and updated all predictions.');
+        }
+
+        function resetToDefaultWeights() {
+            initBaselineModel();
+            recalculateEntireRoster();
+            showNotification('Restored default calibrated baseline model weights.');
+        }
+
+        function updateModelHeaderStatus() {
+            document.getElementById('modelStatusText').textContent = modelState.name;
+        }
+
+        /**
+         * 7. NAVIGATION & NOTIFICATION HELPERS
+         */
+        function switchTab(tabId) {
+            ['predictor', 'roster', 'engine'].forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabId) {
+                    view.classList.remove('hidden');
+                    btn.className = "tab-btn flex items-center space-x-2 py-3 px-4 text-sm font-medium border-b-4 border-cream-50 text-cream-50 bg-royal-900/50 transition-all whitespace-nowrap";
+                } else {
+                    view.classList.add('hidden');
+                    btn.className = "tab-btn flex items-center space-x-2 py-3 px-4 text-sm font-medium border-b-4 border-transparent text-cream-200 hover:text-cream-50 hover:bg-royal-900/30 transition-all whitespace-nowrap";
+                }
+            });
+        }
+
+        function showNotification(message, isError = false) {
+            const banner = document.getElementById('notificationBanner');
+            const box = document.getElementById('notificationBox');
+            const msg = document.getElementById('notificationMessage');
+
+            msg.textContent = message;
+            banner.classList.remove('hidden');
+
+            if (isError) {
+                box.className = 'flex items-center justify-between px-4 py-3 rounded-lg border bg-amber-50 border-amber-700 text-amber-950 shadow-sm';
+            } else {
+                box.className = 'flex items-center justify-between px-4 py-3 rounded-lg border bg-cream-100 border-royal-800 text-royal-900 shadow-sm';
+            }
+        }
+
+        function hideNotification() {
+            document.getElementById('notificationBanner').classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // Initialize on window load
+        window.onload = function() {
+            initBaselineModel();
+            updateRosterView();
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
